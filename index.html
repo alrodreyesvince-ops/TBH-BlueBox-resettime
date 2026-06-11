@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>TBH 青箱タイマー</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:sans-serif;
+}
+
+body{
+background:#0c1125;
+padding:20px;
+color:white;
+}
+
+.container{
+max-width:600px;
+margin:auto;
+background:#111a3d;
+padding:20px;
+border-radius:20px;
+box-shadow:0 0 20px rgba(0,180,255,.2);
+}
+
+h1{
+text-align:center;
+color:#44d5ff;
+margin-bottom:20px;
+}
+
+.card{
+background:#19244d;
+padding:15px;
+border-radius:15px;
+margin-bottom:15px;
+}
+
+.timer-row{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px;
+background:#162042;
+border-radius:12px;
+margin-top:10px;
+}
+
+.stage{
+background:#4560ff;
+padding:8px 20px;
+border-radius:8px;
+font-weight:bold;
+}
+
+.time{
+font-size:30px;
+font-weight:bold;
+color:#3fe5ff;
+}
+
+button{
+cursor:pointer;
+border:none;
+padding:10px 15px;
+border-radius:8px;
+}
+
+.reset{
+background:white;
+}
+
+.start{
+background:#4caf50;
+color:white;
+}
+
+input{
+width:80px;
+text-align:center;
+padding:5px;
+border-radius:6px;
+border:none;
+font-size:18px;
+}
+
+.clearRow{
+display:flex;
+justify-content:space-between;
+margin:10px 0;
+}
+
+.volume{
+width:100%;
+}
+
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>TBH青箱ドロップ間隔タイマー</h1>
+
+<div class="card">
+
+ドロップ間隔：
+
+<input id="interval" type="number" value="12">
+
+分
+
+</div>
+
+<div id="timers"></div>
+
+<div class="card">
+
+<h3>クリア時間</h3>
+
+<div class="clearRow">
+N3-5
+<input id="nclear" type="number" value="1">
+</div>
+
+<div class="clearRow">
+H2-5
+<input id="hclear" type="number" value="2">
+</div>
+
+<div class="clearRow">
+T1-3
+<input id="tclear" type="number" value="4">
+</div>
+
+</div>
+
+<div class="card">
+
+通知音量
+
+<input class="volume" id="volume" type="range" min="0" max="1" step="0.1" value="0.5">
+
+<br><br>
+
+<button class="start" onclick="testSound()">
+通知テスト
+</button>
+
+</div>
+
+</div>
+
+<script>
+
+const stages=[
+"N3-5",
+"H2-5",
+"T1-3"
+];
+
+const timersDiv=document.getElementById("timers");
+
+let timers={};
+
+stages.forEach(stage=>{
+
+const row=document.createElement("div");
+
+row.className="timer-row";
+
+row.innerHTML=`
+
+<div class="stage">${stage}</div>
+
+<div class="time" id="${stage}">
+00:00
+</div>
+
+<div>
+
+<button onclick="startTimer('${stage}')">
+開始
+</button>
+
+<button class="reset"
+onclick="resetTimer('${stage}')">
+リセット
+</button>
+
+</div>
+
+`;
+
+timersDiv.appendChild(row);
+
+});
+
+function format(sec){
+
+let m=Math.floor(sec/60);
+
+let s=sec%60;
+
+return String(m).padStart(2,"0")
++":"
++String(s).padStart(2,"0");
+
+}
+
+function startTimer(stage){
+
+resetTimer(stage);
+
+const intervalMin=
+Number(document.getElementById("interval").value);
+
+let remain=
+intervalMin*60;
+
+document.getElementById(stage).textContent=
+format(remain);
+
+timers[stage]=setInterval(()=>{
+
+remain--;
+
+document.getElementById(stage).textContent=
+format(remain);
+
+if(remain<=0){
+
+clearInterval(timers[stage]);
+
+playSound();
+
+alert(stage+" 宝箱ドロップ！");
+
+}
+
+},1000);
+
+}
+
+function resetTimer(stage){
+
+if(timers[stage]){
+
+clearInterval(timers[stage]);
+
+}
+
+document.getElementById(stage).textContent=
+"00:00";
+
+}
+
+function playSound(){
+
+const ctx=
+new(window.AudioContext||
+window.webkitAudioContext)();
+
+const osc=
+ctx.createOscillator();
+
+const gain=
+ctx.createGain();
+
+osc.connect(gain);
+
+gain.connect(ctx.destination);
+
+gain.gain.value=
+document.getElementById("volume").value;
+
+osc.frequency.value=880;
+
+osc.start();
+
+osc.stop(ctx.currentTime+0.5);
+
+}
+
+function testSound(){
+
+playSound();
+
+}
+
+</script>
+
+</body>
+</html>
